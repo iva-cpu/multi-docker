@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ivavadim/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run ivavadim/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t ivavadim/multi-client ./client
+  - docker build -t ivavadim/multi-nginx ./nginx
+  - docker build -t ivavadim/multi-server ./server
+  - docker build -t ivavadim/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push ivavadim/multi-client
+  - docker push ivavadim/multi-nginx
+  - docker push ivavadim/multi-server
+  - docker push ivavadim/multi-worker
